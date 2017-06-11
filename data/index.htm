@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+		<html>
+			<head>
+				<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+				<script type="text/javascript" src="raphael-2.1.4.min.js"></script>
+				<script type="text/javascript" src="justgage.js"></script>
+				<script type="text/javascript" src="jscolor.min.js"></script>
+				<script>
+			var connection = new WebSocket('ws://' +location.hostname + ':81/', ['ESP8266']);
+			//var connection = new WebSocket('ws://esp8266.local:81/', ['ESP8266']);
+			connection.onopen = function () {  connection.send('Connect ' + new Date()); }; 
+			connection.onerror = function (error) {    console.log('WebSocket Error ', error);};
+			connection.onmessage = function (e) {
+				console.log('Server: ', e.data);
+				var msgArray = e.data.split(","); // split message by delimiter into a string array
+				var red = 0, green = 0, blue = 0, rgb = 0;
+				for (var i = 0; i < msgArray.length; i++) {
+					var command = msgArray[i].charAt(0);
+					var value = (msgArray[i].substr(1)).trim();
+					console.log("Command value:", value);
+					if (command == "a") {
+						console.log("RGB:", value);
+						document.getElementById('color').jscolor.fromString(value);
+					}
+					if (command == "t") {
+						console.log("Temperature:", value);
+						t.refresh(value);
+					}
+					if (command == "h") {
+						console.log("Humidity:", value);
+						h.refresh(value);
+					}
+				}
+				document.getElementById('SystemMessage').innerHTML ="Connected!";
+				document.getElementById("SystemMessage").style.color = "#006F53";
+			};
+			connection.onclose = function(e) {
+				console.log('Server: ', e.data);
+				document.getElementById('SystemMessage').innerHTML ="Disconnected!";
+				document.getElementById("SystemMessage").style.color = "#ff0000";
+			 };
+			function sendRBG(){
+				connection.send("*");
+			}
+		function update(picker) {
+				var rbg = picker.toHEXString(); 
+				console.log('RBG: ' + rbg); 
+				connection.send(rbg);
+		}
+		var t, h;
+		document.addEventListener("DOMContentLoaded", function(event) {
+		t = new JustGage({
+		id: "temp",
+		value: 0,
+		symbol: "\u00B0",
+		min: 0,
+		max: 100,
+		pointer: true,
+		gaugeWidthScale: 0.6,
+		levelColorsGradient: false,
+		title: "Temperature",
+ 		levelColors : [  "#27C100", "#F27C07",  "#ff0000" ],
+		label: "Celcius"
+
+		});
+		
+		h = new JustGage({
+		id: "hum",
+		value: 0,
+		symbol: "%",
+		min: 0,
+		max: 100,
+		pointer: true,
+		gaugeWidthScale: 0.6,
+		levelColorsGradient: false,
+		title: "Humidity",
+		levelColors : [  "#3F11C1", "#68A5C1",  "#ff0000" ],
+		label: "Percent"
+		});
+		});
+		
+		</script>
+		</head>
+		<div style="color:#006F53; font-family: 'DejaVu Sans'; font-size:140%; height:70px"><img src="favicon-96x96.png" width="40" height="40" /> ESP8266 WEMOS RGB and temperature/humidity sensor</div>
+		<div style="width:400px; text-align:center">
+		<button	id="color" class="jscolor {onFineChange:'update(this)', mode:'HSV', valueElement:null}"
+
+    style="width:80px; height:80px; border-radius: 20px; border: 2px solid #a1a1a1">LED</button></div>
+
+		<div id="temp" style="width:400px; height:280px"></div>
+		<div id="hum" style="width:400px; height:280px"></div>
+		<p id="SystemMessage" style="text-align:center; width:400px; height:300px font-family:'DejaVu Sans'; font-size:110%;"></p>
+		<link href="setup">
+		</body>
+		</html>
+		
+		
